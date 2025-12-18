@@ -4,16 +4,21 @@ import { Search, Bell, LogOut, ChevronDown } from 'lucide-react'
 import Avatar from '@/components/ui/Avatar'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { authService } from '@/backend/auth/authService'
+import { useAuth } from '@/backend/auth/authContext'
 
 export default function Header() {
   const [showUserMenu, setShowUserMenu] = useState(false)
   const router = useRouter()
+  const { user } = useAuth()
 
-  const handleLogout = () => {
-    // Clear any auth tokens/session data here
-    localStorage.removeItem('authToken')
-    // Redirect to login page
-    router.push('/auth/login')
+  const handleLogout = async () => {
+    try {
+      await authService.logout()
+      router.push('/auth/login')
+    } catch (error) {
+      console.error('Logout failed:', error)
+    }
   }
   return (
     <header className="bg-white border-b border-gray-200 h-16 fixed top-0 right-0 left-64 z-10">
@@ -40,10 +45,10 @@ export default function Header() {
               onClick={() => setShowUserMenu(!showUserMenu)}
               className="flex items-center gap-3 pl-4 border-l border-gray-200 hover:bg-gray-50 rounded-lg pr-2 py-1 transition-colors"
             >
-              <Avatar name="Jane Doe" status size="md" />
+              <Avatar name={user?.displayName || user?.email || 'User'} status size="md" />
               <div className="text-sm text-left">
-                <p className="font-medium text-gray-900">Jane Doe</p>
-                <p className="text-gray-500 text-xs">Senior Full Stack Developer</p>
+                <p className="font-medium text-gray-900">{user?.displayName || 'User'}</p>
+                <p className="text-gray-500 text-xs">{user?.email}</p>
               </div>
               <ChevronDown className="w-4 h-4 text-gray-400" />
             </button>
