@@ -1,61 +1,157 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Card from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
 import Avatar from '@/components/ui/Avatar'
-import { mockDevelopers } from '@/lib/mockData'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import Button from '@/components/ui/Button'
+import InviteMemberModal from './InviteMemberModal'
+import { UserPlus, Crown, Loader } from 'lucide-react'
+import { inviteService } from '@/backend/projects/inviteService'
+import { useAuth } from '@/backend/auth/authContext'
+import { doc, getDoc } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
 
-export default function ProjectTeam() {
-  const teamMembers = mockDevelopers.slice(0, 4).map((dev, index) => ({
-    ...dev,
-    tasks: [9, 7, 5, 6][index],
-    completed: [6, 5, 3, 4][index],
-  }))
+interface ProjectTeamProps {
+  projectId: string
+}
 
-  const workloadData = teamMembers.map(member => ({
-    name: member.name.split(' ')[0],
-    tasks: member.tasks,
-  }))
+export default function ProjectTeam({ projectId }: ProjectTeamProps) {
+  const { user } = useAuth()
+  const [members, setMembers] = useState<Array<{ id: string; name: string; email: string; role?: string }>>([])
+  const [loading, setLoading] = useState(true)
+  const [showInviteModal, setShowInviteModal] = useState(false)
+  const [isOwner, setIsOwner] = useState(false)
+  const [projectName, setProjectName] = useState('')
+
+  useEffect(() => {
+    loadTeamMembers()
+  }, [projectId])
+
+  const loadTeamMembers = async () => {
+    try {
+      const projectDoc = await getDoc(doc(db, 'projects', projectId))
+      
+      if (projectDoc.exists()) {
+        const projectData = projectDoc.data()
+        setProjectName(projectData.name)
+        setIsOwner(user?.uid === projectData.createdBy)
+      }
+
+      const teamMembers = await inviteService.getProjectMembers(projectId)
+      setMembers(teamMembers)
+    } catch (error) {
+      console.error('Failed to load team members:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleRemoveMember = async (memberId: string) => {
+    if (!user || !window.confirm('Are you sure you want to remove this member?')) {
+      return
+    }
+
+    try {
+      const result = await inviteService.removeMember(projectId, memberId, user.uid)
+      
+      if (result.success) {
+        await loadTeamMembers()
+      } else {
+        alert(result.message)
+      }
+    } catch (error) {
+      console.error('Failed to remove member:', error)
+      alert('Failed to remove member')
+    }
+  }
+
+  if (loading) {
+    return (
+      <Card>
+        <div className="flex items-center justify-center py-12">
+          <Loader className="w-8 h-8 text-primary-500 animate-spin" />
+        </div>
+      </Card>
+    )
+  }
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Team Members</h2>
-        <div className="space-y-4">
-          {teamMembers.map((member) => (
-            <div key={member.id} className="flex items-center gap-4 p-3 border border-gray-200 rounded-lg hover:border-primary-500 transition-colors">
-              <Avatar name={member.name} size="lg" status />
-              <div className="flex-1">
-                <h3 className="font-semibold text-gray-900">{member.name}</h3>
-                <p className="text-sm text-gray-600">{member.role}</p>
-              </div>
-              <div className="text-right">
-                <p className="text-sm font-medium text-gray-900">{member.tasks} tasks</p>
-                <p className="text-xs text-gray-500">{member.completed} completed</p>
-              </div>
-              <Badge variant={member.status === 'Active' ? 'success' : 'danger'}>
-                {member.status}
-              </Badge>
-            </div>
-          ))}
-        </div>
-      </Card>
+    <>
+      {showInviteModal && (
+        <InviteMemberModal
+          projectId={projectId}
+          projectName={projectName}
+          onClose={() => setShowInviteModal(false)}
+        />
+      )}
 
-      <Card>
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Workload Distribution</h2>
-        <div className="h-64">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={workloadData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-              <YAxis tick={{ fontSize: 12 }} />
-              <Tooltip />
-              <Bar dataKey="tasks" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </Card>
-    </div>
+      <div className="space-y-6">
+        <Card>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg font-semibold text-gray-900">Team Members</h2>
+            {isOwner && (
+              <Button
+                onClick={() => setShowInviteModal(true)}
+                className="gap-2"
+                size="sm"
+              >
+                <UserPlus className="w-4 h-4" />
+                Invite Member
+              </Button>
+            )}
+          </div>
+
+          {members.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-gray-500">No team members yet</p>
+              {isOwner && (
+                <Button
+                  onClick={() => setShowInviteModal(true)}
+                  variant="secondary"
+                  className="mt-4 gap-2"
+                >
+                  <UserPlus className="w-4 h-4" />
+                  Invite Your First Member
+                </Button>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {members.map((member) => (
+                <div
+                  key={member.id}
+                  className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg hover:border-primary-500 transition-colors"
+                >
+                  <Avatar name={member.name} size="lg" status />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold text-gray-900">{member.name}</h3>
+                      {member.role === 'Owner' && (
+                        <Crown className="w-4 h-4 text-yellow-500" />
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-600">{member.email}</p>
+                  </div>
+                  <Badge variant={member.role === 'Owner' ? 'warning' : 'info'}>
+                    {member.role}
+                  </Badge>
+                  {isOwner && member.role !== 'Owner' && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleRemoveMember(member.id)}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      Remove
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+      </div>
+    </>
   )
 }

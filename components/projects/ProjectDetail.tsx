@@ -167,7 +167,7 @@ export default function ProjectDetail({ project, onBack }: ProjectDetailProps) {
         <div className={showAI ? 'lg:col-span-2' : 'lg:col-span-3'}>
           {activeTab === 'tasks' && <ProjectTasks />}
           {activeTab === 'github' && <ProjectGitHub />}
-          {activeTab === 'team' && <ProjectTeam />}
+          {activeTab === 'team' && <ProjectTeam projectId={project.id} />}
           {activeTab === 'risks' && <ProjectRisks />}
           {activeTab === 'flowchart' && <FlowchartPreview />}
           {activeTab === 'webhook' && (
