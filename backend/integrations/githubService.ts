@@ -93,12 +93,23 @@ export const githubService = {
     await this.storeWebhookEvent(projectId, 'push', payload);
     
     if (payload.commits && payload.commits.length > 0) {
+      const branchRef = payload.ref || '';
+      const branchName = branchRef.replace('refs/heads/', '');
+      const isMainBranch = branchName === 'main' || branchName === 'master';
+      
+      console.log('Push Event - Branch:', branchName, 'Is Main:', isMainBranch);
+      
       for (const commit of payload.commits) {
         const githubUsername = commit.author.username || payload.sender.login;
         const commitMessage = commit.message;
         
         try {
-          await taskServiceAdmin.matchTaskForCommit(projectId, commitMessage, githubUsername);
+          await taskServiceAdmin.matchTaskForCommit(
+            projectId, 
+            commitMessage, 
+            githubUsername,
+            isMainBranch
+          );
         } catch (error) {
           console.error('Error matching task for commit:', error);
         }
