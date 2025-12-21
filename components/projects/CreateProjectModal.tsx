@@ -22,7 +22,8 @@ export default function CreateProjectModal({ onClose, onSuccess }: CreateProject
     name: '',
     description: '',
     githubRepoUrl: '',
-    memberEmails: ''
+    memberEmails: '',
+    deadlineInDays: ''
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -64,7 +65,8 @@ export default function CreateProjectModal({ onClose, onSuccess }: CreateProject
         description: formData.description,
         githubRepoUrl: formData.githubRepoUrl,
         memberEmails: emails,
-        createdBy: user.uid
+        createdBy: user.uid,
+        deadlineInDays: formData.deadlineInDays ? parseInt(formData.deadlineInDays, 10) : undefined
       })
 
       if (result.invalidEmails.length > 0) {
@@ -162,6 +164,16 @@ export default function CreateProjectModal({ onClose, onSuccess }: CreateProject
               Only registered users will be added to the project
             </p>
           </div>
+
+          <Input
+            label="Project Deadline (days)"
+            type="number"
+            placeholder="30"
+            value={formData.deadlineInDays}
+            onChange={(e) => setFormData({ ...formData, deadlineInDays: e.target.value })}
+            disabled={loading}
+            min="1"
+          />
 
           <div className="flex items-center gap-3 pt-4">
             <Button type="submit" disabled={loading} className="flex-1">

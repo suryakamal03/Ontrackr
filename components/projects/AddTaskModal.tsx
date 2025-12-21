@@ -23,6 +23,7 @@ interface ProjectMember {
 export default function AddTaskModal({ projectId, onClose, onTaskCreated }: AddTaskModalProps) {
   const [title, setTitle] = useState('')
   const [assignedTo, setAssignedTo] = useState('')
+  const [deadlineInDays, setDeadlineInDays] = useState('')
   const [members, setMembers] = useState<ProjectMember[]>([])
   const [loading, setLoading] = useState(false)
   const [loadingMembers, setLoadingMembers] = useState(true)
@@ -67,7 +68,8 @@ export default function AddTaskModal({ projectId, onClose, onTaskCreated }: AddT
         title: title.trim(),
         projectId,
         assignedTo,
-        assignedToName: selectedMember?.name || ''
+        assignedToName: selectedMember?.name || '',
+        deadlineInDays: deadlineInDays ? parseInt(deadlineInDays, 10) : undefined
       })
 
       onTaskCreated()
@@ -137,6 +139,16 @@ export default function AddTaskModal({ projectId, onClose, onTaskCreated }: AddT
               </select>
             )}
           </div>
+
+          <Input
+            label="Task Deadline (days)"
+            type="number"
+            placeholder="7"
+            value={deadlineInDays}
+            onChange={(e) => setDeadlineInDays(e.target.value)}
+            disabled={loading}
+            min="1"
+          />
 
           <div className="flex gap-3 pt-2">
             <Button

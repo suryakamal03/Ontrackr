@@ -18,13 +18,21 @@ export interface CreateTaskData {
   projectId: string;
   assignedTo: string;
   assignedToName: string;
+  deadlineInDays?: number;
 }
 
 export const taskService = {
   async createTask(data: CreateTaskData): Promise<string> {
     const keywords = this.extractKeywords(data.title);
     
-    const taskData = {
+    let deadlineAt = undefined;
+    if (data.deadlineInDays && data.deadlineInDays > 0) {
+      const deadline = new Date();
+      deadline.setDate(deadline.getDate() + data.deadlineInDays);
+      deadlineAt = deadline;
+    }
+    
+    const taskData: any = {
       title: data.title,
       projectId: data.projectId,
       assignedTo: data.assignedTo,
@@ -32,8 +40,14 @@ export const taskService = {
       status: 'To Do',
       keywords,
       createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
+      updatedAt: serverTimestamp(),
+      reminderEnabled: true,
+      reminderSent: false
     };
+
+    if (deadlineAt) {
+      taskData.deadlineAt = deadlineAt;
+    }
 
     const docRef = await addDoc(collection(db, 'tasks'), taskData);
     return docRef.id;

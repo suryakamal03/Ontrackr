@@ -26,6 +26,9 @@ export interface Task {
   keywords: string[]
   createdAt: any
   updatedAt: any
+  deadlineAt?: any
+  reminderEnabled?: boolean
+  reminderSent?: boolean
 }
 
 export interface Project {
@@ -39,6 +42,8 @@ export interface Project {
   githubOwner?: string
   githubRepo?: string
   githubRepoUrl?: string
+  deadlineAt?: any
+  createdAt?: any
 }
 
 export interface RiskAlert {
@@ -72,6 +77,21 @@ export interface ActivityItem {
   timestamp: string
   user?: User
   metadata?: Record<string, unknown>
+}
+
+export interface GitHubActivity {
+  id: string
+  projectId: string
+  repositoryFullName?: string // e.g., "owner/repo"
+  activityType: 'commit' | 'pull_request_opened' | 'pull_request_merged' | 'issue_opened' | 'issue_closed'
+  title: string
+  githubUsername: string
+  branch?: string
+  relatedTaskId?: string
+  githubUrl: string
+  githubId?: string // Unique GitHub identifier for idempotency (commit SHA, PR number, issue number)
+  createdAt: any
+  avatarUrl?: string
 }
 
 export interface Flowchart {

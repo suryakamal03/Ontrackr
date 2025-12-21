@@ -13,6 +13,7 @@ export interface ProjectData {
   members: string[];
   status: 'Active' | 'On Hold' | 'Archived';
   progress: number;
+  deadlineAt?: Timestamp;
 }
 
 export interface CreateProjectInput {
@@ -21,6 +22,7 @@ export interface CreateProjectInput {
   githubRepoUrl: string;
   memberEmails: string[];
   createdBy: string;
+  deadlineInDays?: number;
 }
 
 export const projectService = {
@@ -69,6 +71,13 @@ export const projectService = {
 
     const allMembers = [...new Set([input.createdBy, ...memberIds])];
 
+    let deadlineAt = undefined;
+    if (input.deadlineInDays && input.deadlineInDays > 0) {
+      const deadline = new Date();
+      deadline.setDate(deadline.getDate() + input.deadlineInDays);
+      deadlineAt = Timestamp.fromDate(deadline);
+    }
+
     const projectData: Omit<ProjectData, 'createdAt'> & { createdAt: any } = {
       name: input.name,
       description: input.description || '',
@@ -80,7 +89,8 @@ export const projectService = {
       members: allMembers,
       status: 'Active',
       progress: 0,
-      createdAt: serverTimestamp()
+      createdAt: serverTimestamp(),
+      ...(deadlineAt && { deadlineAt })
     };
 
     const docRef = await addDoc(collection(db, 'projects'), projectData);

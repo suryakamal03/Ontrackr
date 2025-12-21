@@ -6,6 +6,7 @@ import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
 import Avatar from '@/components/ui/Avatar'
 import AddTaskModal from './AddTaskModal'
+import TaskDetailsModal from './TaskDetailsModal'
 import { Plus } from 'lucide-react'
 import { taskService } from '@/backend/tasks/taskService'
 import { inviteService } from '@/backend/projects/inviteService'
@@ -27,6 +28,7 @@ export default function ProjectTasks({ projectId }: ProjectTasksProps) {
   const [members, setMembers] = useState<ProjectMember[]>([])
   const [selectedMember, setSelectedMember] = useState<string | null>(null)
   const [showAddModal, setShowAddModal] = useState(false)
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -117,7 +119,8 @@ export default function ProjectTasks({ projectId }: ProjectTasksProps) {
                 {statusTasks.map((task) => (
                   <div
                     key={task.id}
-                    className="p-3 bg-white border border-gray-200 rounded-lg hover:border-primary-500 transition-colors"
+                    onClick={() => setSelectedTask(task)}
+                    className="p-3 bg-white border border-gray-200 rounded-lg hover:border-primary-500 transition-colors cursor-pointer"
                   >
                     <p className="text-sm font-medium text-gray-900 mb-2">{task.title}</p>
                     <div className="flex items-center justify-between">
@@ -144,6 +147,14 @@ export default function ProjectTasks({ projectId }: ProjectTasksProps) {
           projectId={projectId}
           onClose={() => setShowAddModal(false)}
           onTaskCreated={() => {}}
+        />
+      )}
+
+      {selectedTask && (
+        <TaskDetailsModal
+          task={selectedTask}
+          onClose={() => setSelectedTask(null)}
+          onUpdate={() => {}}
         />
       )}
     </div>

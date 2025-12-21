@@ -16,7 +16,20 @@ service cloud.firestore {
     
     match /github_events/{eventId} {
       allow read: if request.auth != null;
-      allow create: if true;
+      allow create: if true; // Allow server-side webhook processing
+    }
+    
+    // GitHub Activity collection - stores processed webhook activities
+    match /githubActivity/{activityId} {
+      allow read: if request.auth != null; // Project members can read
+      allow create: if true; // Allow server-side webhook processing
+      allow update, delete: if false; // Activities are immutable once created
+    }
+    
+    // Project Members collection - for member validation
+    match /projectMembers/{memberId} {
+      allow read: if request.auth != null;
+      allow create, update, delete: if request.auth != null;
     }
     
     match /tasks/{taskId} {
