@@ -298,7 +298,7 @@ export default function MyDashboardPage() {
               </button>
             </div>
 
-            <div className="mt-4 max-h-[calc(100vh-280px)] overflow-y-auto">
+            <div className="mt-4 max-h-[calc(100vh-280px)] overflow-y-auto hide-scrollbar">
               {activeTab === 'todo' && renderTaskList(todoTasks)}
               {activeTab === 'in-review' && renderTaskList(inReviewTasks)}
               {activeTab === 'issues' && renderIssues()}
@@ -324,7 +324,7 @@ export default function MyDashboardPage() {
                 <p className="text-sm text-gray-500">No recent activity</p>
               </div>
             ) : (
-              <div className="space-y-3 max-h-[calc(100vh-280px)] overflow-y-auto pr-2">{" "}
+              <div className="space-y-3 max-h-[calc(100vh-280px)] overflow-y-auto hide-scrollbar pr-2">{" "}
                 {activities.slice(0, 8).map((activity) => {
                   const { icon: Icon, color } = getActivityIcon(activity.activityType)
 

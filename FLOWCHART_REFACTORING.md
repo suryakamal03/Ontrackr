@@ -18,7 +18,7 @@
 ### 4. Gemini AI Integration
 - **Created** [geminiService.ts](backend/integrations/geminiService.ts)
 - Uses **Gemini Flash 1.5** model for fast flowchart generation
-- API Key: `AIzaSyB1qmZaz_f-8C5JlE9PUKZ-wpxA2HH5ASc`
+- API Key: Stored in `.env.local` file
 - Generates Mermaid diagram syntax from natural language prompts
 
 ### 5. Firestore Backend
@@ -88,8 +88,10 @@ npm install @google/generative-ai mermaid
 
 ## Environment Variable
 
+Add to your `.env.local` file:
+
 ```env
-NEXT_PUBLIC_GEMINI_API_KEY=AIzaSyB1qmZaz_f-8C5JlE9PUKZ-wpxA2HH5ASc
+NEXT_PUBLIC_GEMINI_API_KEY=your_gemini_api_key_here
 ```
 
 ## Notes

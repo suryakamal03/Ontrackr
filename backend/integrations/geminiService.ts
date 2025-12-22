@@ -1,6 +1,10 @@
 import { GoogleGenAI } from '@google/genai'
 
-const API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY || 'AIzaSyB1qmZaz_f-8C5JlE9PUKZ-wpxA2HH5ASc'
+const API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY
+
+if (!API_KEY) {
+  throw new Error('NEXT_PUBLIC_GEMINI_API_KEY is not set in environment variables')
+}
 
 // Initialize Gemini AI
 const ai = new GoogleGenAI({ apiKey: API_KEY })
