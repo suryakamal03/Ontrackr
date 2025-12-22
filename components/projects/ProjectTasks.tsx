@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Card from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
@@ -23,6 +23,10 @@ interface ProjectTasksProps {
   projectId: string
 }
 
+// Simple in-memory cache for members to prevent re-fetching on tab switches
+const membersCache = new Map<string, { data: ProjectMember[], timestamp: number }>()
+const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
+
 export default function ProjectTasks({ projectId }: ProjectTasksProps) {
   const [tasks, setTasks] = useState<Task[]>([])
   const [members, setMembers] = useState<ProjectMember[]>([])
@@ -30,12 +34,11 @@ export default function ProjectTasks({ projectId }: ProjectTasksProps) {
   const [showAddModal, setShowAddModal] = useState(false)
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
   const [loading, setLoading] = useState(true)
+  const [loadingMembers, setLoadingMembers] = useState(true)
 
   useEffect(() => {
     loadMembers()
-  }, [projectId])
-
-  useEffect(() => {
+    
     const unsubscribe = taskService.subscribeToProjectTasks(projectId, (updatedTasks) => {
       setTasks(updatedTasks)
       setLoading(false)
@@ -46,10 +49,31 @@ export default function ProjectTasks({ projectId }: ProjectTasksProps) {
 
   const loadMembers = async () => {
     try {
+      setLoadingMembers(true)
+      
+      // Check cache first
+      const cached = membersCache.get(projectId)
+      const now = Date.now()
+      
+      if (cached && (now - cached.timestamp) < CACHE_DURATION) {
+        setMembers(cached.data)
+        setLoadingMembers(false)
+        return
+      }
+      
+      // Fetch from server
       const membersData = await inviteService.getProjectMembers(projectId)
       setMembers(membersData)
+      
+      // Update cache
+      membersCache.set(projectId, {
+        data: membersData,
+        timestamp: now
+      })
     } catch (error) {
       console.error('Failed to load members:', error)
+    } finally {
+      setLoadingMembers(false)
     }
   }
 
@@ -77,7 +101,13 @@ export default function ProjectTasks({ projectId }: ProjectTasksProps) {
         </Button>
       </div>
 
-      {members.length > 0 && (
+      {loadingMembers ? (
+        <div className="flex gap-2 flex-wrap animate-pulse">
+          <div className="h-8 w-28 bg-gray-200 rounded-lg"></div>
+          <div className="h-8 w-32 bg-gray-200 rounded-lg"></div>
+          <div className="h-8 w-24 bg-gray-200 rounded-lg"></div>
+        </div>
+      ) : members.length > 0 && (
         <div className="flex gap-2 flex-wrap">
           <button
             onClick={() => setSelectedMember(null)}

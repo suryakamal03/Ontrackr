@@ -26,7 +26,6 @@ const navigation: NavItem[] = [
   { name: 'Project Dashboard', href: '/projects', icon: FolderKanban },
   { name: 'My Dashboard', href: '/my-dashboard', icon: User },
   { name: 'Task Management', href: '/tasks', icon: CheckSquare },
-  { name: 'AI Flowchart Gen.', href: '/flowchart', icon: Workflow },
   { name: 'Real-Time Chat', href: '/chat', icon: MessageSquare, badge: 3 },
   { name: 'Risk Alerts', href: '/risk-alerts', icon: AlertTriangle, badge: 3 },
 ]

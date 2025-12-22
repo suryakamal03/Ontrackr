@@ -42,6 +42,13 @@ service cloud.firestore {
       allow update: if true;
     }
     
+    // Flowcharts collection - project-scoped flowcharts
+    match /flowcharts/{flowchartId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null && request.auth.uid == resource.data.createdBy;
+    }
+    
     match /{document=**} {
       allow read, write: if request.auth != null;
     }

@@ -1,4 +1,4 @@
-import { collection, addDoc, doc, getDoc, updateDoc, arrayUnion, serverTimestamp, Timestamp, query, where, getDocs } from 'firebase/firestore';
+import { collection, addDoc, doc, getDoc, updateDoc, arrayUnion, serverTimestamp, Timestamp, query, where, getDocs, documentId } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 export interface ProjectInvite {
@@ -130,29 +130,49 @@ export const inviteService = {
   },
 
   async getProjectMembers(projectId: string): Promise<Array<{ id: string; name: string; email: string; role?: string }>> {
-    const projectDoc = await getDoc(doc(db, 'projects', projectId));
-    
-    if (!projectDoc.exists()) {
-      return [];
-    }
+    try {
+      const projectDoc = await getDoc(doc(db, 'projects', projectId));
+      
+      if (!projectDoc.exists()) {
+        return [];
+      }
 
-    const memberIds = projectDoc.data().members || [];
-    const members = [];
+      const projectData = projectDoc.data();
+      const memberIds = projectData.members || [];
+      
+      if (memberIds.length === 0) {
+        return [];
+      }
 
-    for (const memberId of memberIds) {
-      const userDoc = await getDoc(doc(db, 'users', memberId));
-      if (userDoc.exists()) {
-        const userData = userDoc.data();
-        members.push({
-          id: userDoc.id,
-          name: userData.name || userData.email,
-          email: userData.email,
-          role: memberId === projectDoc.data().createdBy ? 'Owner' : 'Member'
+      // Batch fetch all users in chunks of 10 (Firestore 'in' query limit)
+      const members = [];
+      const chunkSize = 10;
+      
+      for (let i = 0; i < memberIds.length; i += chunkSize) {
+        const chunk = memberIds.slice(i, i + chunkSize);
+        const usersQuery = query(
+          collection(db, 'users'),
+          where(documentId(), 'in', chunk)
+        );
+        
+        const usersSnapshot = await getDocs(usersQuery);
+        
+        usersSnapshot.docs.forEach(userDoc => {
+          const userData = userDoc.data();
+          members.push({
+            id: userDoc.id,
+            name: userData.name || userData.email,
+            email: userData.email,
+            role: userDoc.id === projectData.createdBy ? 'Owner' : 'Member'
+          });
         });
       }
-    }
 
-    return members;
+      return members;
+    } catch (error) {
+      console.error('Error fetching project members:', error);
+      return [];
+    }
   },
 
   async removeMember(projectId: string, userId: string, requestingUserId: string): Promise<{ success: boolean; message: string }> {

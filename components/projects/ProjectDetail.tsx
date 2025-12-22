@@ -9,10 +9,9 @@ import AIAssistant from '@/components/projects/AIAssistant'
 import ProjectTasks from '@/components/projects/ProjectTasks'
 import ProjectGitHub from '@/components/projects/ProjectGitHub'
 import ProjectTeam from '@/components/projects/ProjectTeam'
-import ProjectRisks from '@/components/projects/ProjectRisks'
-import FlowchartPreview from '@/components/projects/FlowchartPreview'
+import ProjectFlowchart from '@/components/projects/ProjectFlowchart'
 import WebhookConfig from '@/components/projects/WebhookConfig'
-import { ChevronLeft, Settings, MoreVertical, Users, GitBranch, AlertTriangle, Workflow, MessageSquare, Webhook } from 'lucide-react'
+import { ChevronLeft, Settings, MoreVertical, Users, GitBranch, Workflow, MessageSquare, Webhook } from 'lucide-react'
 import { Project } from '@/types'
 
 interface ProjectDetailProps {
@@ -22,7 +21,7 @@ interface ProjectDetailProps {
 
 export default function ProjectDetail({ project, onBack }: ProjectDetailProps) {
   const [showAI, setShowAI] = useState(false)
-  const [activeTab, setActiveTab] = useState<'tasks' | 'github' | 'team' | 'risks' | 'flowchart' | 'webhook'>('tasks')
+  const [activeTab, setActiveTab] = useState<'tasks' | 'github' | 'team' | 'flowchart' | 'webhook'>('tasks')
 
   return (
     <div className="space-y-6">
@@ -129,17 +128,6 @@ export default function ProjectDetail({ project, onBack }: ProjectDetailProps) {
           Team
         </button>
         <button
-          onClick={() => setActiveTab('risks')}
-          className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
-            activeTab === 'risks'
-              ? 'text-primary-600 border-b-2 border-primary-600'
-              : 'text-gray-600 hover:text-gray-900'
-          }`}
-        >
-          <AlertTriangle className="w-4 h-4" />
-          Risks
-        </button>
-        <button
           onClick={() => setActiveTab('flowchart')}
           className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
             activeTab === 'flowchart'
@@ -168,8 +156,7 @@ export default function ProjectDetail({ project, onBack }: ProjectDetailProps) {
           {activeTab === 'tasks' && <ProjectTasks projectId={project.id} />}
           {activeTab === 'github' && <ProjectGitHub projectId={project.id} />}
           {activeTab === 'team' && <ProjectTeam projectId={project.id} />}
-          {activeTab === 'risks' && <ProjectRisks />}
-          {activeTab === 'flowchart' && <FlowchartPreview />}
+          {activeTab === 'flowchart' && <ProjectFlowchart projectId={project.id} />}
           {activeTab === 'webhook' && (
             <WebhookConfig 
               githubOwner={project.githubOwner || ''} 

@@ -96,7 +96,11 @@ export interface GitHubActivity {
 
 export interface Flowchart {
   id: string
+  projectId: string
   name: string
-  preview?: string
-  createdAt?: string
+  description: string
+  diagramData?: string // Mermaid or JSON diagram data
+  createdAt: any
+  updatedAt: any
+  createdBy: string
 }
